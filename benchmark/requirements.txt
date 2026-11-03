@@ -1,0 +1,12 @@
+# Dependencies for reproducing this benchmark.
+#
+# The extraction code in domstrip_extract/ pulls in html2text, lxml and
+# readability-lxml (which itself depends on lxml). httpx is used only to
+# re-fetch pages with --refresh, and tiktoken only for real BPE token counts;
+# without tiktoken pass --tokenizer whitespace, which is reproducible but not
+# what a model bills you for.
+httpx>=0.28
+html2text>=2024.2.26
+lxml>=5.2
+readability-lxml>=0.8.1
+tiktoken>=0.8

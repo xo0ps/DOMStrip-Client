@@ -15,8 +15,19 @@ It exposes two tools:
 | `clean_html` | Convert HTML you already have into clean Markdown. No network fetch for the HTML. |
 
 The adapter holds **no database or billing state**. It authenticates to the DOMStrip
-service with a key from your local environment — never from tool arguments — so an
+service with a key from your local environment -- never from tool arguments -- so an
 MCP client cannot redirect your key anywhere.
+
+## How much does it actually save?
+
+**[`benchmark/`](benchmark/) measures it on 107 real pages: 76.03% fewer tokens
+than raw HTML** (macro average; median 81.67%), 11.68M HTML tokens down to 2.04M
+Markdown. It runs offline from a pinned snapshot, and `--verify` fails the run if
+any page's expected content is missing from its output.
+
+The spread is worth reading: repositories save 95.45%, articles only 65.34%, and
+one nearly markup-free page saves 6.86%. Both the pooled and macro figures are
+reported, because quoting only the pooled one overstates the typical page.
 
 ## What DOMStrip actually does
 

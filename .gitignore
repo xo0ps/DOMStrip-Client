@@ -10,3 +10,5 @@ build/
 .mypy_cache/
 .env
 .env.*
+benchmark/.corpus/
+benchmark/.venv/
