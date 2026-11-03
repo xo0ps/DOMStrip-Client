@@ -20,14 +20,16 @@ MCP client cannot redirect your key anywhere.
 
 ## How much does it actually save?
 
-**[`benchmark/`](benchmark/) measures it on 107 real pages: 76.03% fewer tokens
-than raw HTML** (macro average; median 81.67%), 11.68M HTML tokens down to 2.04M
-Markdown. It runs offline from a pinned snapshot, and `--verify` fails the run if
-any page's expected content is missing from its output.
+**[`benchmark/`](benchmark/) measures it on 1,038 real pages from 74 sites:
+84.08% fewer tokens than raw HTML** (macro average; median 90.12%), 76.4M HTML
+tokens down to 9.8M Markdown. It reproduces from a clean clone and `--verify`
+fails the run if any page's expected content is missing from its output.
 
-The spread is worth reading: repositories save 95.45%, articles only 65.34%, and
-one nearly markup-free page saves 6.86%. Both the pooled and macro figures are
-reported, because quoting only the pooled one overstates the typical page.
+The spread is worth reading rather than the headline; that is why three figures
+are reported. Repositories save 95.81%, articles 82.61%, and a pooled total
+reads 87.16% because it is dominated by the largest pages. Corpus composition
+drives this a lot: the same code measured 76.03% on an earlier article-heavy
+21-page set.
 
 ## What DOMStrip actually does
 

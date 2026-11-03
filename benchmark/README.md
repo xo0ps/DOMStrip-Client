@@ -3,28 +3,27 @@
 A reproducible benchmark comparing the tokens an agent spends on a page's raw
 HTML with the tokens in the Markdown DOMStrip returns for it.
 
-**Headline: 76.03% fewer tokens than raw HTML** (macro average across 107 real
-pages; median 81.67%). Every figure below can be reproduced offline from the
-snapshot in this directory.
+**Headline: 84.08% fewer tokens than raw HTML** across **1,038 real pages from
+74 sites** (macro average; median 90.12%). Reproducible from a clean clone.
 
 ```
-tokenizer=tiktoken:o200k_base  pages_ok=107  metric=1-(md/html)
+tokenizer=tiktoken:o200k_base  pages_ok=1037  metric=1-(md/html)
 
 per page type (mean of per-page reduction vs raw HTML)
-  article          n=27  reduction=+65.34%
-  blog             n=10  reduction=+69.84%
-  documentation    n=40  reduction=+77.91%
-  edge             n=6   reduction=+56.71%
-  repo             n=18  reduction=+95.45%
-  table            n=6   reduction=+82.94%
+  documentation    n=611  reduction=+83.87%
+  blog             n=230  reduction=+84.61%
+  article          n=165  reduction=+82.61%
+  repo             n=23   reduction=+95.81%
+  table            n=6    reduction=+82.94%
+  edge             n=2    reduction=+75.66%
 
 macro average (each page equally weighted)
-  reduction=+76.03%  median=+81.67%
-  pooled=+82.50% (dominated by the largest pages)
-  p95_extraction_ms=270
+  reduction=+84.08%  median=+90.12%
+  pooled=+87.16% (dominated by the largest pages)
+  p95_extraction_ms=160
 ```
 
-Totals: 11,683,125 HTML tokens to 2,044,378 Markdown tokens.
+Totals: **76,382,820 HTML tokens to 9,809,743 Markdown tokens.**
 
 ---
 
@@ -34,18 +33,38 @@ Totals: 11,683,125 HTML tokens to 2,044,378 Markdown tokens.
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-python real_pages.py --verify            # offline, from the pinned snapshot
-python real_pages.py --refresh --verify  # re-fetch the 107 live URLs instead
+python real_pages.py --verify   # fetch anything missing, then check content
 ```
 
-`--verify` exits non-zero if any page's expected content is missing from its
-Markdown. That check exists because a benchmark that only counts tokens will
-reward output that has quietly deleted the page.
+The script caches fetched HTML in `.corpus/` (git-ignored), so the first run
+downloads 1,038 pages and later runs are offline and fast. `results-o200k.json`
+records the exact per-page token counts behind the figures above.
 
-No network access is needed for the default run: `corpus.tar.gz` holds the exact
-HTML the numbers were measured on.
+Expect small differences from the published numbers if a source page has
+changed since the manifest was generated. `--refresh` re-fetches everything.
 
 ---
+
+## Corpus
+
+**1,038 pages across 74 sites.** Built by mining public sitemaps and running
+bounded same-site crawls, then selecting **round-robin with a per-site cap** so
+no single host dominates, and **quota'd by kind**, because reachable sitemaps
+are overwhelmingly documentation:
+
+| kind | n | coverage |
+| --- | ---: | --- |
+| documentation | 611 | Python, Rust, Go, Django, FastAPI, Flask, NumPy, Pandas, MDN, Postgres, Redis, Docker, Kubernetes, SQLite, Node, React, Vue, Angular, Svelte, Next, Tailwind, TypeScript, Webpack, Vite, pip, mypy, Ruff, Celery, SQLAlchemy, Terraform and more |
+| blog | 230 | Cloudflare, GitHub, Stack Overflow, jvns, danluu, Martin Fowler, Simon Willison, Joel Spolsky, Ars Technica, The Register, overreacted, Jim Nielsen |
+| article | 165 | Wikipedia, IETF RFCs, W3C specs, WHATWG, LWN, Mozilla |
+| repo | 23 | CPython, Linux, Rust, Go, Node, VS Code, Kubernetes, pandas, NumPy, Django, FastAPI, Flask, requests, httpx, Ruff, pytest, pre-commit, Black, Poetry, Redis |
+| table | 6 | GDP, population, HTTP status codes, ISO 639, browsers, editors |
+| edge | 2 | example.org, IANA |
+
+Corpus composition matters more than corpus size. An earlier 21-page version
+of this benchmark read **76.03%**; the same code on 1,038 pages reads
+**84.08%**. Nothing changed in the extractor. The small corpus was
+article-heavy, and articles save least.
 
 ## What is measured
 
@@ -62,9 +81,6 @@ For each page, two token counts under one tokenizer:
 | **median** | middle value, outlier-resistant | a few huge pages skewing the mean |
 | **pooled** | total tokens across all pages | total spend; dominated by the biggest pages |
 
-Pooled is 82.50% and macro is 76.03%. Quoting only the pooled number would
-overstate the typical case, so both are given.
-
 ## Why there is no "vs visible text" baseline
 
 An earlier version also compared against `text_content()`. That comparison was
@@ -78,39 +94,24 @@ withdrawn because it is not well defined:
   opposite things, and it led to two attempted "fixes" that silently deleted
   content while improving the score.
 
-Content selection is now checked directly with `--verify` instead.
-
-## Corpus
-
-107 pages, pinned in `corpus.tar.gz` (5.4 MB compressed, 34 MB raw):
-
-| kind | n | coverage |
-| --- | ---: | --- |
-| documentation | 40 | Python, Rust, Go, Django, FastAPI, Flask, NumPy, Pandas, MDN, Postgres, Redis, Docker, Kubernetes, sqlite, man pages, PEPs |
-| article | 27 | 20 Wikipedia topics, 4 IETF RFCs, W3C HTML spec |
-| repo | 18 | CPython, Linux, Rust, Go, Node, VS Code, pandas, Kubernetes and others |
-| blog | 10 | jvns.ca, danluu.com, martinfowler.com, joelonsoftware.com, HN, Lobsters |
-| table | 6 | GDP, population, HTTP status codes, ISO 639, browsers |
-| edge | 6 | example.org, IANA, httpbin, motherfuckingwebsite, text.npr |
-
-Chosen to span the shapes people actually feed to agents. A corpus of only
-article pages would flatter any extractor: that is the case where extraction
-looks best, and repos (95.45%) and articles (65.34%) differ by 30 points here.
+Content selection is now checked directly with `--verify`: 91 of the pages carry
+required substrings that must appear in the output, and the run exits non-zero
+if any is missing.
 
 ## Honest caveats
 
-1. **These are extraction-only figures.** No network, no fetch time, no
-   bandwidth. They measure the conversion step, not end-to-end latency.
-2. **Tokens are model-specific.** `o200k_base` is the default. `cl100k_base`
-   gives 75.90% macro / 81.61% median on the same corpus, so the result is not an
-   artefact of one encoding, but do not quote a number without its tokenizer.
-3. **`httpbin-html` reduces by only 6.86%** — it is almost pure prose with
-   little markup, so there is little to remove. A benchmark where every page
-   scored ~90% would be hiding something.
-4. **The snapshot is a point in time.** Pages change; `--refresh` re-fetches.
-   The pinned archive is what the published numbers refer to.
-5. **Extraction can still fail on JS-rendered pages**, which are out of scope
-   here: the corpus contains only server-rendered HTML.
+1. **Extraction-only figures.** No network, no fetch time, no bandwidth. They
+   measure the conversion step, not end-to-end latency.
+2. **Tokens are model-specific.** `o200k_base` is the default; `cl100k_base`
+   gives 83.96% macro / 89.96% median on the same corpus. Never quote a number
+   without its tokenizer.
+3. **1037 of 1038 pages measured.** The one rejection is a Discord invite page
+   returning `content_not_extractable`, which is the correct behaviour.
+4. **Not every page reduces well.** The best pages save >95%; a few nearly
+   markup-free pages save almost nothing. The macro average is not a floor.
+5. **Source pages change.** The manifest is a point-in-time record; `--refresh`
+   re-fetches.
+6. **JS-rendered pages are out of scope**; the corpus is server-rendered HTML.
 
 ## How the extraction code is pinned
 
