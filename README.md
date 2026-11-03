@@ -1,5 +1,9 @@
 # domstrip-mcp
 
+<!-- MCP Registry ownership marker: do not remove. -->
+
+mcp-name: io.github.xo0ps/domstrip-mcp
+
 A local [Model Context Protocol](https://modelcontextprotocol.io/) server that converts
 web pages into clean Markdown, using the [DOMStrip](https://domstrip.dev) API.
 
