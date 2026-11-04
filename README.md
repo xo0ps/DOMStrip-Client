@@ -1,5 +1,7 @@
 # domstrip-mcp
 
+[![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/xo0ps/domstrip-client)
+
 <!-- MCP Registry ownership marker: do not remove. -->
 
 mcp-name: io.github.xo0ps/domstrip-mcp
