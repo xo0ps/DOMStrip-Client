@@ -12,3 +12,4 @@ build/
 .env.*
 benchmark/.corpus/
 benchmark/.venv/
+/.idea/*

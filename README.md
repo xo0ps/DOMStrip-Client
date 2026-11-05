@@ -2,6 +2,7 @@
 
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/xo0ps/domstrip-client)
 
+[![DOMStrip MCP server](https://mcprush.com/badge/domstrip-mcp/card.svg)](https://mcprush.com/to/domstrip-mcp?ref=badge)
 <!-- MCP Registry ownership marker: do not remove. -->
 
 mcp-name: io.github.xo0ps/domstrip-mcp
