@@ -38,6 +38,17 @@ _TOOL_NOTE = (
     "need JavaScript, logins, or bot challenges may not be extractable."
 )
 
+# Shared parameter documentation. Both tools take the same `mode`, and an agent picking
+# "auto" without knowing what it trades off is the most likely cause of a bad extraction,
+# so the meaning is stated once and referenced by both descriptions.
+_MODE_DOC = (
+    "mode selects the extraction strategy: 'auto' (default) picks per page and is the "
+    "right choice unless you know the page shape; 'article' keeps only the main article "
+    "body and drops navigation, related links and comment threads, which is what you "
+    "want for a news or blog post; 'full' keeps the whole document, for pages that are "
+    "mostly tables or lists where article detection would discard real content."
+)
+
 
 class CleanMarkdownResult(BaseModel):
     markdown: str
@@ -236,6 +247,7 @@ def create_mcp_server(
 ) -> Any:
     from mcp.server.mcpserver import MCPServer
     from mcp.server.mcpserver.exceptions import ToolError
+    from mcp.types import ToolAnnotations
 
     # Never read a .env from the client's working directory: an untrusted
     # project folder could otherwise redirect the API key to another origin.
@@ -263,16 +275,66 @@ def create_mcp_server(
 
     @server.tool(
         name="fetch_clean_markdown",
-        description="Fetch a public http(s) URL and convert it to clean Markdown. " + _TOOL_NOTE,
+        title="Fetch a URL as Markdown",
+        annotations=ToolAnnotations(
+            title="Fetch a URL as Markdown",
+            # Reads a remote page and returns content. It writes nothing on the server, but
+            # it is not idempotent: the page can change between calls, so the same URL may
+            # return different Markdown.
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=False,
+            # Reaches an external URL, so the result depends on the open web.
+            open_world_hint=True,
+        ),
+        description=(
+            "Fetch a public http(s) URL over the network and return its main content as "
+            "clean Markdown.\n\n"
+            "Use this when you need the readable content of a page you have only its URL "
+            "for. Do NOT use it when you already have the HTML: pass that to clean_html "
+            "instead, which skips the network call (and the metered charge) entirely.\n\n"
+            "Counterpart: clean_html (no fetch). This tool fetches, then converts.\n\n"
+            "Args:\n"
+            "    url: An absolute http or https URL. Private, loopback, link-local, "
+            "metadata and CGNAT addresses are refused on every redirect hop, so "
+            "localhost and internal hostnames will not resolve.\n"
+            "    " + _MODE_DOC + "\n\n"
+            "Returns headings, fenced code blocks with language hints, tables and links; "
+            "strips scripts, forms, embeds, trackers and hidden nodes. " + _TOOL_NOTE
+        ),
     )
     async def fetch_clean_markdown(url: str, mode: ExtractionMode = "auto") -> CleanMarkdownResult:
         return await _call("/v1/clean-url", {"url": url, "mode": mode})
 
     @server.tool(
         name="clean_html",
+        title="Convert HTML to Markdown",
+        annotations=ToolAnnotations(
+            title="Convert HTML to Markdown",
+            # Purely a conversion: same input, same output, and it touches no network
+            # resource beyond the DOMStrip service itself.
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
+            open_world_hint=False,
+        ),
         description=(
-            "Convert HTML you already have into clean Markdown; the service makes no network "
-            "request for the HTML. base_url only resolves relative links. " + _TOOL_NOTE
+            "Convert HTML you already hold into clean Markdown. The service makes no "
+            "request for the HTML itself, so this works for pages behind a login, from a "
+            "file, or from a previous fetch.\n\n"
+            "Use this when the HTML is already in hand. Do NOT use it when you only have a "
+            "URL and no HTML: that is fetch_clean_markdown, which fetches before "
+            "converting.\n\n"
+            "Counterpart: fetch_clean_markdown (fetches a URL first). This tool converts "
+            "only.\n\n"
+            "Args:\n"
+            "    raw_html: The HTML document as a string. Works with partial fragments as "
+            "well as full documents.\n"
+            "    base_url: Optional. Only used to turn relative links in the HTML into "
+            "absolute ones; nothing is fetched from it. Omit it and relative links stay "
+            "relative, which is fine unless the consumer needs to follow them.\n"
+            "    " + _MODE_DOC + "\n\n"
+            "Returns the same cleaned Markdown as fetch_clean_markdown. " + _TOOL_NOTE
         ),
     )
     async def clean_html(
