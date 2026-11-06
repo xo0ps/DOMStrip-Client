@@ -288,16 +288,13 @@ def create_mcp_server(
             open_world_hint=True,
         ),
         description=(
-            "Fetch a public http(s) URL over the network and return its main content as "
-            "clean Markdown.\n\n"
-            "Use this when you need the readable content of a page you have only its URL "
-            "for. Do NOT use it when you already have the HTML: pass that to clean_html "
-            "instead, which skips the network call (and the metered charge) entirely.\n\n"
-            "Counterpart: clean_html (no fetch). This tool fetches, then converts.\n\n"
+            "Fetch a public http(s) URL and return its main content as clean Markdown.\n\n"
+            "Use this when you have only a URL. If you already hold the HTML, use "
+            "clean_html instead: it skips the network call and the metered charge.\n\n"
             "Args:\n"
             "    url: An absolute http or https URL. Private, loopback, link-local, "
-            "metadata and CGNAT addresses are refused on every redirect hop, so "
-            "localhost and internal hostnames will not resolve.\n"
+            "metadata and CGNAT addresses are refused on every redirect hop, so localhost "
+            "and internal hostnames will not resolve.\n"
             "    " + _MODE_DOC + "\n\n"
             "Returns headings, fenced code blocks with language hints, tables and links; "
             "strips scripts, forms, embeds, trackers and hidden nodes. " + _TOOL_NOTE
@@ -319,20 +316,13 @@ def create_mcp_server(
             open_world_hint=False,
         ),
         description=(
-            "Convert HTML you already hold into clean Markdown. The service makes no "
-            "request for the HTML itself, so this works for pages behind a login, from a "
-            "file, or from a previous fetch.\n\n"
-            "Use this when the HTML is already in hand. Do NOT use it when you only have a "
-            "URL and no HTML: that is fetch_clean_markdown, which fetches before "
-            "converting.\n\n"
-            "Counterpart: fetch_clean_markdown (fetches a URL first). This tool converts "
-            "only.\n\n"
+            "Convert HTML you already hold into clean Markdown, without fetching it.\n\n"
+            "Use this when the HTML is in hand — from a login-walled page, a file, or a "
+            "previous fetch. If you have only a URL, use fetch_clean_markdown instead.\n\n"
             "Args:\n"
-            "    raw_html: The HTML document as a string. Works with partial fragments as "
-            "well as full documents.\n"
-            "    base_url: Optional. Only used to turn relative links in the HTML into "
-            "absolute ones; nothing is fetched from it. Omit it and relative links stay "
-            "relative, which is fine unless the consumer needs to follow them.\n"
+            "    raw_html: The HTML document, full or fragment.\n"
+            "    base_url: Optional. Resolves relative links in the HTML to absolute ones; "
+            "nothing is fetched from it. Omit it and links stay relative.\n"
             "    " + _MODE_DOC + "\n\n"
             "Returns the same cleaned Markdown as fetch_clean_markdown. " + _TOOL_NOTE
         ),
