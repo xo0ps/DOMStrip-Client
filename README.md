@@ -3,6 +3,9 @@
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/xo0ps/domstrip-client)
 
 [![DOMStrip MCP server](https://mcprush.com/badge/domstrip-mcp/card.svg)](https://mcprush.com/to/domstrip-mcp?ref=badge)
+
+[![DOMStrip MCP server – quality and maintenance score on Glama](https://glama.ai/mcp/servers/xo0ps/DOMStrip-Client/badges/card.svg)](https://glama.ai/mcp/servers/xo0ps/DOMStrip-Client)
+
 <!-- MCP Registry ownership marker: do not remove. -->
 
 mcp-name: io.github.xo0ps/domstrip-mcp
