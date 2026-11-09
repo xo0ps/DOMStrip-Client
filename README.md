@@ -6,6 +6,8 @@
 
 [![DOMStrip MCP server – quality and maintenance score on Glama](https://glama.ai/mcp/servers/xo0ps/DOMStrip-Client/badges/card.svg)](https://glama.ai/mcp/servers/xo0ps/DOMStrip-Client)
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/xo0ps-domstrip-client-188ufa)](https://m8ven.ai/mcp/xo0ps-domstrip-client-188ufa?s=readme)
+
 <!-- MCP Registry ownership marker: do not remove. -->
 
 mcp-name: io.github.xo0ps/domstrip-mcp
