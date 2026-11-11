@@ -12,6 +12,10 @@ version: 2
 updates:
   # uv is a first-class ecosystem: it updates pyproject.toml AND uv.lock together, which keeps
   # the manifest and the lock from drifting apart in the same PR.
+  #
+  # It also discovers benchmark/requirements.txt, so a separate `pip` entry for /benchmark is
+  # redundant and produces a duplicate PR for every bump (observed: lxml, html2text,
+  # readability-lxml and tiktoken each arrived twice). One entry covers both.
   - package-ecosystem: uv
     directory: "/"
     schedule:
@@ -27,26 +31,17 @@ updates:
         update-types: ["minor", "patch"]
     labels: ["dependencies"]
 
-  # The benchmark's own pinned requirements, used only to reproduce published numbers. They are
-  # not shipped, so these PRs can never affect users — but a stale html2text/lxml is still a
-  # dependency we run.
-  - package-ecosystem: pip
-    directory: "/benchmark"
+  # Action SHAs are pinned deliberately in the workflows; a floating tag would undo that.
+  # Dependabot is the supported way to move a pin forward.
+  - package-ecosystem: github-actions
+    directory: "/"
     schedule:
       interval: weekly
-      day: monday
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     commit-message:
-      prefix: "deps(bench)"
-    groups:
-      patch-and-minor:
-        applies-to: version-updates
-        update-types: ["minor", "patch"]
-    labels: ["dependencies"]
+      prefix: "deps(actions)"
+    labels: ["dependencies", "ci"]
 
-  # No github-actions entry: this repo has no .github/workflows yet. Add one together with the
-  # first workflow so the pinned action SHAs are watched from the start.
-  #
   # No docker entry: there is no Dockerfile. Add one together with the image if it is introduced.
   #
   # No terraform entry: there is no infrastructure here.
