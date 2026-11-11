@@ -6,7 +6,7 @@
 # without tiktoken pass --tokenizer whitespace, which is reproducible but not
 # what a model bills you for.
 httpx>=0.28
-html2text>=2024.2.26
+html2text>=2025.4.15
 lxml>=5.2
 readability-lxml>=0.8.1
 tiktoken>=0.8
