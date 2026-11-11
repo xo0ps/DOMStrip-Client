@@ -1,0 +1,52 @@
+# Automated dependency updates.
+#
+# This repo ships a package that directories install, so an outdated or vulnerable dependency
+# is a supply-chain problem for every user, not just for us. Without an automated PR, a bump
+# happens only when someone notices, which is how a known CVE sits in a published package.
+#
+# Dependabot opens a PR; a human reviews and merges it, because a dependency bump in a published
+# package is a supply-chain change.
+
+version: 2
+
+updates:
+  # uv is a first-class ecosystem: it updates pyproject.toml AND uv.lock together, which keeps
+  # the manifest and the lock from drifting apart in the same PR.
+  - package-ecosystem: uv
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    # Grouped so a routine week produces one reviewable PR rather than one per package.
+    groups:
+      patch-and-minor:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+    labels: ["dependencies"]
+
+  # The benchmark's own pinned requirements, used only to reproduce published numbers. They are
+  # not shipped, so these PRs can never affect users — but a stale html2text/lxml is still a
+  # dependency we run.
+  - package-ecosystem: pip
+    directory: "/benchmark"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps(bench)"
+    groups:
+      patch-and-minor:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+    labels: ["dependencies"]
+
+  # No github-actions entry: this repo has no .github/workflows yet. Add one together with the
+  # first workflow so the pinned action SHAs are watched from the start.
+  #
+  # No docker entry: there is no Dockerfile. Add one together with the image if it is introduced.
+  #
+  # No terraform entry: there is no infrastructure here.
