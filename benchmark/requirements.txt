@@ -5,8 +5,8 @@
 # re-fetch pages with --refresh, and tiktoken only for real BPE token counts;
 # without tiktoken pass --tokenizer whitespace, which is reproducible but not
 # what a model bills you for.
-httpx>=0.28
+httpx>=0.28.1
 html2text>=2025.4.15
-lxml>=5.2
-readability-lxml>=0.8.1
+lxml>=6.1.3
+readability-lxml>=0.9
 tiktoken>=0.14.0
