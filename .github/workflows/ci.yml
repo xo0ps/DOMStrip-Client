@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: this workflow only reads the repository. Nothing here publishes.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: lint, test and build (py${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.12 is the declared floor in requires-python; 3.13 is the next minor, so an
+        # incompatibility surfaces here before a user hits it.
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+
+      # --frozen makes CI fail if uv.lock is out of date with pyproject.toml, rather than
+      # silently resolving a different tree than a user would get.
+      - name: Install
+        run: uv sync --frozen --python ${{ matrix.python }} --extra dev
+
+      - name: Lint
+        run: uv run --no-sync ruff check .
+
+      - name: Tests
+        run: uv run --no-sync python -m pytest -q
+
+      # The wheel is what a directory installs. A packaging change that drops the console script
+      # or the LICENSE is invisible to the tests above.
+      - name: Build wheel
+        run: uv build
+
+      - name: Wheel carries the entry point and the license
+        run: |
+          python - <<'PY'
+          import glob, zipfile
+          wheel = sorted(glob.glob("dist/*.whl"))[-1]
+          names = zipfile.ZipFile(wheel).namelist()
+          assert any(n.endswith("licenses/LICENSE") for n in names), "LICENSE missing from wheel"
+          entry = [n for n in names if n.endswith("entry_points.txt")][0]
+          text = zipfile.ZipFile(wheel).read(entry).decode()
+          assert "domstrip-mcp" in text, f"console script missing: {text}"
+          print(f"{wheel}: entry point and LICENSE present")
+          PY
