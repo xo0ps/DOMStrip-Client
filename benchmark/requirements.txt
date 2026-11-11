@@ -8,5 +8,5 @@
 httpx>=0.28
 html2text>=2024.2.26
 lxml>=5.2
-readability-lxml>=0.8.1
+readability-lxml>=0.9
 tiktoken>=0.8
